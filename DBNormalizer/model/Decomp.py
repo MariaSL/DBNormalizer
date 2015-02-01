@@ -1,35 +1,63 @@
-__author__ = 'mariaslanova','Bishnu','Harsha'
+__author__ = 'Paris: Maria, Bishnu, Harsha'
 
 from DBNormalizer.model.Normalization import *
+
+N = Normalization()
+
 class Decomposition:
     def __init__(self):
         self.List_Relation=list()
-    #def combineSingleTonFD(self,MinFDs):
+    
 
     def proposal3NF(self,R,MinFDs,Fds):
-        #FDs=self.combineSingleTonFD(MinFDs)
+        """
+        Finds the 3NF decomposition for the Relation R with minimal cover MinFDs
+        :param R: set Attributes set
+        :param MinFDs: FDependencyList  Minimal Cover
+        :param Fds: FDependencyList   Minimal Cover
+        :return:list of tuple of decomposed relations along with their projected FDs for example
+					[({Attributes},[FDs]),(...)]
+        """
         FDs=Fds
         for fd in MinFDs:
             R1=self.createNewRelation(fd)
             #self.List_Relation.append(R1)
-            self.addRelation(R1)
+            F0=self.projectFDs(R,R1,MinFDs)
+            self.addRelation(R1,F0)
+
 
         if not self.candidateKeyChecking(R,MinFDs,FDs):
             KRs=self.createKeyRelation(R,MinFDs,FDs)
-
-            self.List_Relation.append(KRs[0])
+            Fkey=self.projectFDs(R,KRs[0],MinFDs)
+            self.List_Relation.append((KRs[0],Fkey))
 
 
         return self.List_Relation
     #testing Phase
     def proposalBCNF(self,R0,F0):
+        """
+        Finds the BCNF decomposition Proposal for the Relation R with minimal cover MinFDs
+        :param R0: set Attributes set
+        :param F0: FDependencyList  Minimal Cover
+        :return: list of tuple of decomposed relations along with their projected FDs for example
+					[({Attributes},[FDs]),(...)]
+        """
         accum=list()
         L=self.decomposeBCNF(R0,F0,accum)
-        print("----start Recursive Call------")
+        #print("----start Recursive Call------")
         return L
     def decomposeBCNF(self,R0,F0,accum):
-        print("-----Start of a call")
-        print("call with:",R0,F0)
+        """
+		Finds the BCNF decomposition for the Relation R with minimal cover MinFDs
+		param R:set Attributes set
+		param F0:FDependencyList  Minimal Cover
+		param accum:list to keep intermediate result, Accumulator 
+		
+		return List: list of tuple of decomposed relations along with their projected FDs for example
+					[({Attributes},[FDs]),(...)]
+		"""
+		#print("-----Start of a call")
+        #print("call with:",R0,F0)
         norm=Normalization()
         candKeys=norm.findCandKeys(R0,F0,F0)
         #print(candKeys)
@@ -69,8 +97,15 @@ class Decomposition:
 
 
     def projectFDs(self,ParentRelation,DecompRelation,ParentFDs):
+        """
+        Compute the Functional Dependencies for a given relation
+        :param ParentRelation: set attribute set of parent relation
+        :param DecompRelation: set attributes set of decomposed relation
+        :param ParentFDs: FDependencyList Minimal Cover of Parent Relation
+        :return: FDependencyList list of projected Functional Dependencies.
+        """
         T=FDependencyList()
-        properset=Normalization.findNonEmptySubsets(self,DecompRelation)
+        properset=N.findNonEmptySubsets(DecompRelation)
         #print('PROPERSET = ',properset)
         for X in properset:
             xclosure=ParentFDs.attribute_closure(X)
@@ -87,30 +122,38 @@ class Decomposition:
 
 
 
-    def addRelation(self,R1):
+    def addRelation(self,R1,F):
 
-        """ This method will check if any of the currently
-            added relation is a subset of New Relation """
+        """ 
+		This method will check if any of the currently
+        added relation is a subset of New Relation and then will add the relation in the list
+		param R1:set of Attributes
+		param F:FDependencyList projected Functional Dependency
+		return 0
+		"""
         #check=False;
         T=self.List_Relation.copy()
         if self.List_Relation==[]:
-            self.List_Relation.append(R1)
+            self.List_Relation.append((R1,F))
         else:
             for g in T:
-                if(g.issubset(R1)):
+                if(g[0].issubset(R1)):
                     self.List_Relation.remove(g)
-                    #self.List_Relation.append(R1)
+                #self.List_Relation.append(R1)
                 else:
-                    if R1.issubset(g):
-                        #self.List_Relation.remove(R1)
+                    if R1.issubset(g[0]):
+                #self.List_Relation.remove(R1)
                         return 0
-
-
-            self.List_Relation.append(R1)
+            self.List_Relation.append((R1,F))
 
         return 0
-    def createNewRelation(self,nfd):
 
+    def createNewRelation(self,nfd):
+        """
+        Create a relation from a given FD
+        :param nfd: FDependency
+        :return: set of attributes of the relation formed
+        """
         g=list()
         g.extend(nfd.lh)
         g.extend(nfd.rh)
@@ -118,16 +161,30 @@ class Decomposition:
         return set(g)
     #N=Normalization ()
     def createKeyRelation(self,R,MinFDs,FDs):
+        """
+        finds the keys relations
+        :param R: set of Parent relation
+        :param MinFDs: minimal Cover
+        :param FDs: Minimal Cover
+        :return: list of set of all the key relations
+        """
         #KeyRelations=list()
-        KeyRelations=Normalization.findCandKeys(self,R,MinFDs,FDs)
+        KeyRelations=N.findCandKeys(R,MinFDs,FDs)
         return KeyRelations
 
     def candidateKeyChecking(self,R,MinFDs,FDs):
+        """
+        checks if the decomposed relation contains any key
+        :param R: et of Parent relation
+        :param MinFDs: minimal Cover
+        :param FDs: Minimal Cover
+        :return: true if contains key false otherwise
+        """
         flag=False
-        keys=Normalization.findCandKeys(self,R,MinFDs,FDs)
+        keys=N.findCandKeys(R,MinFDs,FDs)
         for R2 in self.List_Relation:
             for key in keys:
-                if  key.issubset(R2):
+                if key.issubset(R2[0]):
                     flag=True
                     return True
                 else:

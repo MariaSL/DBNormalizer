@@ -1,14 +1,14 @@
-__author__ = 'Paris'
+__author__ = 'Paris: Maria, Bishnu, Harsha'
 
 from xml.etree import ElementTree as XmlTree
-#import FDependency
 
-#import FDependencyList
-#import Relation
-#fileHandler=open(path+filename,'r')
 
 
 class XmlParsing:
+    """
+    Contains methods to handle XMl export and impor
+    """
+
     def __init__(self,Path=None,fileName=None, ):
         self.fileName=fileName
         self.Path=Path
@@ -16,10 +16,14 @@ class XmlParsing:
         pass
 
     def writeTableToXML(self,tableName,attributeList,fdList,schemaName,exPath='/'):
-        '''
-        fdList is list of tuples of list of left and right hand fd
-        fdList=[(['a','b'],['c']),([].[])....]
-        '''
+        """
+		Write a Relation and FDs in a relation.xml file
+		param attribiteList:list of attributes of the relation that will be written in a XML file
+        param fdList: is list of tuples of list of left and right hand fd  for example, fdList=[(['a','b'],['c']),([].[])....]
+        param schemaName:string name of the schema
+		param exPath:string ended with '/'
+		return 0
+		"""
         XmlRoot=XmlTree.Element('configuration')
         Schema=XmlTree.SubElement(XmlRoot,'schema',{'name':schemaName})
         TableInfo=XmlTree.SubElement(Schema,"tableInfo")
@@ -46,6 +50,12 @@ class XmlParsing:
         Xtree.write(exPath+tableName+".xml")
         return 0
     def readXMLToTable(self,fileName,pathName="/"):
+        """
+        Read relation information from a XML file named fileName located at pathName
+        :param fileName: string, name of the file to be read
+        :param pathName: string, path location ended with '/'
+        :return: Dictionary with key values 'Table_Name','Schema_Name','Dependency','Column'
+        """
         TableInfo=dict()
         Tree=XmlTree.parse(open(pathName+fileName,'r'))
         treeRoot=Tree.getroot()

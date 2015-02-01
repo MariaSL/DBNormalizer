@@ -1,4 +1,4 @@
-__author__ = 'humberto'
+__author__ = 'Gabriela, Maria, Humberto, Bishnu, Harsha'
 
 from DBNormalizer.model.FDependency import *
 from itertools import combinations
@@ -19,6 +19,10 @@ class FDependencyList(list):
             else:
                 string = string + ', ' + self[i].__str__()
         return string
+
+    def remove_fd_idx(self, idx):
+        removed = self.pop(idx)
+        return removed
 
     def attribute_closure(self, attributes):
         """
@@ -42,23 +46,43 @@ class FDependencyList(list):
 
 
     def MinimalCover(self):
+        """
+        Computes the Minimal Cover from a set of Functional Dependency
+        :return: FDependencyList list of minimal Cover
+        """
         if self==[]:
             return []
         return self.makeRightsingleton().removeExtraneous().removeDuplicacy()
 
     def get_lhs(self):
+        """
+        Finds the attributes that apear in left
+        :return: list of all of the attributes that apears in left
+        hand side of the Functional Dependencies
+        """
+
         attr = set()
         for fd in self:
             attr = attr.union(set(fd.lh))
         return list(attr)
 
     def get_rhs(self):
+        """
+        Finds the attributes apear in right
+        :return:list of all of the attributes that apears in right
+        hand side of the Functional Dependencies
+        """
+
         attr = set()
         for fd in self:
             attr = attr.union(set(fd.rh))
         return list(attr)
 
     def candidate_keys(self):
+        """
+        Obsolete
+        :return:
+        """
         keys = list()
         lhs = set(self.get_lhs())
         rhs = set(self.get_rhs())
@@ -82,6 +106,12 @@ class FDependencyList(list):
 
 
     def makeRightsingleton(self):
+        """
+        Finds FDs with singleTon right Side
+        :return:functional dependencies having
+        singleton right attributes
+        """
+
         singletonList=[]
         for fd in self:
             lhs = fd.lh
@@ -95,6 +125,13 @@ class FDependencyList(list):
 
 
     def computeClosureNcheck(self, attr, rhs):
+        """
+        Checks if rhs is in closure of attr
+        :param attr: Attribute list for which closure will be computed
+        :param rhs: RHS attribute list
+        :return: true if closure of attr contains rhs else false
+        """
+
         def contains(closureList, rhs):
             if closureList.count(rhs[0]) >= 1:
                 return 1
@@ -106,10 +143,23 @@ class FDependencyList(list):
         else:
             return 0
     def findNonEmptySubsets(self,S):
+        """
+        finds the non empty subsets of S
+        :param S: any set
+        :return:A list of all the non empty sub set of S.
+        """
+
         subs = [set(j) for i in range(len(S)) for j in list(combinations(S, i + 1))]
         return subs
 
     def removeExtraneous(self):
+        """
+        Finds FDs with uncessary left attributes remove
+        :return:Functional Dependencies removing
+        unnecessaryAttributes (Extraneous Attributes) from left hand side
+        return FDependencyList: List of FDs after removing Extraneous attributes.
+        """
+
         ExtraneousList=[]
         exFlag=0
         for fd in self:
@@ -131,6 +181,12 @@ class FDependencyList(list):
         return FDependencyList(ExtraneousList)
 
     def removeDuplicacy(self):
+        """
+        Finds FDs with dupclicate Fds removed
+        :return: Functional Dependencies removing
+        Duplicate FDs
+        """
+
         i=0
         while i < len(self):
             fd = self[i]

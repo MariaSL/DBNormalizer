@@ -1,29 +1,45 @@
-__author__ = 'mariaslanova','Bishnu','Harsha'
+__author__ = 'Paris: Maria, Bishnu, Harsha'
 
 from itertools import combinations
 from DBNormalizer.model.mincover import *
 from DBNormalizer.model.FDependencyList import *
 
 class Normalization:
-#lhs is a set of LHS attributes
-#candKeys is a set of all candidate Keys {{a,b},{bcd}}
-#key is boolean to store if lhs is key or not
+    """
+    This class contains the methods to achieve Normalization
+    """
 
     def __init__(self):
+        """
+        Constructor Inializes FDList1NF,FDList3NF,FDListBCNF,FDListNoNF that
+		represents the functional dependencies that violate the corresponding Normal Form
+        :return:
+        """
         self.FDList2NF=FDependencyList()
         self.FDList3NF=FDependencyList()
         self.FDListBCNF=FDependencyList()
         self.FDListNoNF=FDependencyList()
 
     def isKey(self,lhs, candKeys):
+        """
+        Check is param lhs is a candidate key
+        :param lhs: list
+        :param candKeys: list of set of candidate Keys
+        :return boolean: if lhs is key else return false:
+        """
         key = False
         if (candKeys.__contains__(lhs)):
             key = True
         return key
 
-    #rhs is set
-    #singleton is boolean variable
+    
     def isSingleton(self,rhs):
+        """
+        Check if param rhs is singleton
+        :param rhs: list/set
+        :return: True if singleton false otherwise
+        """
+
         singleTon = False
         l =rhs.__len__()
         if (l == 1):
@@ -31,10 +47,14 @@ class Normalization:
         return singleTon
 
 
-    #attr is a single Attribute
-    #candKeys is set of candidate keys
-    #prime is boolean variable
+    
     def isNonPrime(self,attr, candKeys):
+        """
+        check if attr is a non prime attribute
+        :param attr: Attribute of a realtion
+        :param candKeys:list of Candidate Keys
+        :return: True of non Prime else false.
+        """
         prime = False
         for key in candKeys:
             if (key.__contains__(attr)):
@@ -43,28 +63,37 @@ class Normalization:
         return not prime
 
 
-    #lhs is set of LHS attributes
-    #key is a single key in set format extracted from allKeys
-    #propersubset is boolean variable
+    
     def isProperSubset(self,lhs, key):
+        """
+        check if lhs is proper subset of key
+        :param lhs: set of left attribute of a FD
+        :param key: Set representing a  candidate key
+        :return: True if lhs is proper subset of key else False.
+        """
         propersubset = False
         if (lhs.issubset(key) and not key.issubset(lhs)):
             propersubset = True
         return propersubset
 
 
-    #S is set
-    #subs is a list of all the non empty subsets of S subs=[{a},{b},{a,b}]
+    
     def findNonEmptySubsets(self,S):
+        """
+        Find the non empty subset of S
+        """
+
         subs = [set(j) for i in range(len(S)) for j in list(combinations(S, i + 1))]
         return subs
 
 
-    #minFDs is the list of Minimum Cover of R over FDs
-    #LRset=[{LHSs},{RHSs}]
-    #L={LHSs}
-    #R={RHSs}
+    
     def getLnRSet(self,minFDs):
+        """
+        Compute all the attributes that apears in left and right and store them into two seperate List
+        :param minFDs: Minimal Cover of A relation
+        :return: list of set of left and right attributes e.g. [{lhs attributes}{right attributes}]
+        """
         LRset = list()
         L = []
         R = []
@@ -80,6 +109,12 @@ class Normalization:
     #S=[{LHSs},{RHSs}]
     #necessary is the necessary attributes
     def getNecessaryAttribute(self,R, minFDs):
+        """
+        ompute the Necessary attribute
+        :param R: Attribute Set of the relation
+        :param minFDs: Minimal Cover of the relation R
+        :return: Set of attributes that apears only at left hand side of the FDs, but never in right
+        """
         S = Normalization.getLnRSet(self,minFDs)
         necessary = R.difference(S[0].union(S[1]))
         necessary = necessary.union(S[0].difference(S[1]))
@@ -90,59 +125,96 @@ class Normalization:
     #S=[{LHSs},{RHSs}]
     #useless is the useless attributes
     def getUseLessAttribute(self,R, minFDs):
+        """
+        Compute the Useless attribute
+        :param R: Attribute Set of the relation
+        :param minFDs: Minimal Cover of the relation R
+        :return: Set of attributes that apears only at right hand side of the FDs, but never in left
+        """
+
         S = Normalization.getLnRSet(self,minFDs)
         useless = S[1].difference(S[0])
         return useless
 
 
-    #X is the set of Necessary Attributes
-    #Y is the set Useless Attributes
-    #M is the set of neither Necessary nor Useless
+    
     def getUsefulAttribute(self,R, X, Y):
-        #X=getNecessaryAttribute(R,minFDs)
-        #Y=getUseLessAttribute(R,minFDs)
+        """
+        Compute the Necessary attribute
+        :param R: Attribute Set of the relation
+        :param X: et of Necessary attributes
+        :param Y: set of useless attributes
+        :return: Set of attributes that apears  at left hand side of the FDs,and also  at right
+        """
         M = R.difference(X.union(Y))
         return M
 
 
-    #X is set to be added to each elements(sets) of L
-    #L is set of sets
+    
     def addedL(self,L, X):
+        """
+        Add X to the all the element of L
+        :param L: list of Set of attributes
+        :param X: set of attributes
+        :return: list of set of attributes after adding X to all the elements of L
+        """
         L1 = list()
         for Z in L:
             L1.append(Z.union(X))
         return L1
 
 
-    #candKeys is the List of Sets of candidate Key
-    #zclosure is set that contains closure of Z
+    
     def findCandKeys(self,R, minFDs,FDs):
+        """
+
+        Compute all the candidate Keys of A relation with Attribute Set R and Minimal Cover minFDs
+		param R: set of attributes of a relation.
+		param minFDs: Minimal Cover of the relation
+		param FDs: Also Minimal Cover of the relation
+		return list: list of set of candidate keys
+        """
+
         candKeys = list()
-        if   minFDs==[]:
-             return R
-        X = Normalization.getNecessaryAttribute(self,R, minFDs)
-        Y = Normalization.getUseLessAttribute(self,R, minFDs)
-        M = Normalization.getUsefulAttribute(self,R,X, Y)
+        X = self.getNecessaryAttribute(R, minFDs)
+        #print(X)
+        Y = self.getUseLessAttribute(R, minFDs)
+        #print(Y)
+        M = self.getUsefulAttribute(R,X, Y)
+        #print(M)
+        L = self.findNonEmptySubsets(M)
         if(X!=set()):
             xclosure =set(FDs.attribute_closure(X))
-            print(xclosure)
+            #print(xclosure)
             if (xclosure == R):
+                #print("True")
                 candKeys.append(X)
-        L = Normalization.findNonEmptySubsets(self,M)
-        L = Normalization.addedL(self,L, X)
-        i = 0
+                #print(candKeys)
+            else:
+                L = self.addedL(L, X)
+
+
+        
         while L != []:
-            i = i + 1
+            #i = i + 1
             Z = L[0]
             del L[0]
             zclosure = set(FDs.attribute_closure(Z))
             if (zclosure == R):
                 candKeys.append(Z)
-                Normalization.removeSuperSet(self,Z, L)
+                L=self.removeSuperSet(Z, L)
         return candKeys
 
 
     def removeSuperSet(self,Z, L):
+        """
+
+        Remove the super set of Z from L
+		param Z: set for which super set to be removed
+		param L: list of set from which superset of Z to be removed
+		return list: list of after doing removing
+        """
+
         L1 = L.copy()
         for l in L1:
             if (Z.issubset(l)):
@@ -151,6 +223,7 @@ class Normalization:
 
 
     def findClosure(Fds,attr):
+
         closure=Fds.attribute_closure(attr)
         return set(closure)
 
@@ -163,6 +236,16 @@ class Normalization:
     #isProperSubset(lhs, key) checks if lhs is a proper subset of key.
     #nonPrime(rhs) checks if rhs is a non Prime attribute
     def check2NF(self,fd, lhs, rhs, candKeys):
+        """
+
+        check for 2NF violation and keep the violated FD in FDList2NF
+		param fd: Depenency of the relation that is to be tested for violation
+		param lhs: list ,left attributes of fd
+		param rhs: list ,right attributes of fd
+		param candKeys: list of set of candidate Keys
+		reutrn boolean: true violates 2NF conditions false otherwise
+        """
+
         violation2NF = False
         if (self.isSingleton(rhs)):
             for key in candKeys:
@@ -177,6 +260,16 @@ class Normalization:
     #iskey(lhs,candKeys) test if lhs is key
     #toAttributeList(rhs) get the all the attributes in right Hand side as a List
     def check3NF(self,fd, lhs, rhs, candKeys):
+        """
+
+        check for 3NF violation and keep the violated FD in FDList3NF
+		param fd: Depenency of the relation that is to be tested for violation
+		param lhs: list ,left attributes of fd
+		param rhs: list ,right attributes of fd
+		param candKeys: list of set of candidate Keys
+		reutrn boolean: true violates 3NF conditions false otherwise
+        """
+
         violation3NF = False
         if (self.isKey(lhs, candKeys)):
             violation3NF = False
@@ -189,8 +282,16 @@ class Normalization:
         return violation3NF
 
 
-    #lhs and rhs are set of LHS and RHS attributes respectively
+    
     def checkBCNF(self,fd, lhs, rhs, candKeys):
+        """
+     	check for BCNF violation and keep the violated FD in FDListBCNF
+		param fd: Depenency of the relation that is to be tested for violation
+		param lhs: list ,left attributes of fd
+		param rhs: list ,right attributes of fd
+		param candKeys: list of set of candidate Keys
+		reutrn boolean: true violates BCNF conditions false otherwise
+        """
         violationBCNF = False
         if (not self.isKey(lhs, candKeys)):
             violationBCNF = True
